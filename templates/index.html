@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Urban Fog Cleaner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    body{
+      font-family: "Fredoka", sans-serif;
+    }
+    /* Add a smooth fade-in animation for images */
+    #image-wrapper img {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    #image-wrapper img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-200 via-gray-100 to-gray-300 text-gray-900 font-sans">
+
+  <div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-2xl mt-14 border border-gray-300">
+    <h1 class="text-4xl font-extrabold mb-8 text-center text-blue-700 drop-shadow-lg select-none">Urban Fog Cleaner</h1>
+    <h2 class="text-center text-lg text-gray-600 mb-10 italic tracking-wide">Dehazing Tool with Smart Image Enhancement</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+
+      <input type="file" name="image" accept="image/*" required
+        class="block w-full border-2 border-blue-400 bg-blue-50 text-blue-900 rounded-lg p-3 cursor-pointer hover:border-blue-600 transition duration-300"/>
+
+      <div class="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+        <label class="flex-1">
+          <span class="block text-sm font-semibold text-blue-600 mb-2">Method</span>
+          <select name="method" class="mt-1 block w-full border-2 border-blue-400 rounded-lg p-3 text-blue-800 shadow-sm hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            <option value="dcp" {% if method=='dcp' %}selected{% endif %}>DCP Dehazing (recommended)</option>
+            <option value="pipeline" {% if method=='pipeline' %}selected{% endif %}>Edge/Hist Pipeline</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="p-6 border-2 border-blue-300 rounded-2xl bg-gradient-to-tr from-blue-50 to-white shadow-inner">
+        <h3 class="font-semibold text-blue-700 mb-4 text-xl select-none">DCP Parameters</h3>
+
+        <div class="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+          <label class="flex-1 text-blue-700 font-medium">
+            omega (strength):
+            <input type="number" step="0.01" name="omega" value="{{ request.form.get('omega', '0.95') }}"
+              class="border border-blue-300 p-2 rounded-lg w-full md:w-auto focus:ring-2 focus:ring-blue-400 focus:border-blue-600 transition duration-300" />
+          </label>
+          <label class="flex-1 text-blue-700 font-medium">
+            patch size:
+            <input type="number" name="patch" value="{{ request.form.get('patch', '15') }}"
+              class="border border-blue-300 p-2 rounded-lg w-full md:w-auto focus:ring-2 focus:ring-blue-400 focus:border-blue-600 transition duration-300" />
+          </label>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 mt-4">
+          <label class="flex-1 text-blue-700 font-medium">
+            guided radius:
+            <input type="number" name="guided_r" value="{{ request.form.get('guided_r', '40') }}"
+              class="border border-blue-300 p-2 rounded-lg w-full md:w-auto focus:ring-2 focus:ring-blue-400 focus:border-blue-600 transition duration-300" />
+          </label>
+          <label class="flex-1 text-blue-700 font-medium">
+            guided eps:
+            <input type="number" step="1e-4" name="guided_eps" value="{{ request.form.get('guided_eps', '0.001') }}"
+              class="border border-blue-300 p-2 rounded-lg w-full md:w-auto focus:ring-2 focus:ring-blue-400 focus:border-blue-600 transition duration-300" />
+          </label>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 mt-4">
+          <label class="flex-1 text-blue-700 font-medium">
+            t0 (min transmission):
+            <input type="number" step="0.01" name="t0" value="{{ request.form.get('t0', '0.1') }}"
+              class="border border-blue-300 p-2 rounded-lg w-full md:w-auto focus:ring-2 focus:ring-blue-400 focus:border-blue-600 transition duration-300" />
+          </label>
+        </div>
+      </div>
+
+      <div class="p-6 border-2 border-indigo-300 rounded-2xl bg-gradient-to-tr from-indigo-50 to-white shadow-inner space-y-4">
+        <label class="flex items-center space-x-3 text-indigo-700 font-semibold">
+          <input type="checkbox" name="freq" {% if request.form.get('freq')=='on' %}checked{% else %}checked{% endif %}
+            class="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out" />
+          <span>Frequency Enhance</span>
+        </label>
+        <label class="text-indigo-700 font-medium">Amount:
+          <input type="number" step="0.1" name="freq_amt" value="{{ request.form.get('freq_amt', '1.0') }}"
+            class="border border-indigo-300 rounded-lg p-2 w-24 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-600 transition duration-300" />
+        </label>
+
+        <label class="flex items-center space-x-3 text-indigo-700 font-semibold">
+          <input type="checkbox" name="hist" {% if request.form.get('hist')=='on' %}checked{% else %}checked{% endif %}
+            class="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out" />
+          <span>Histogram Stretch</span>
+        </label>
+
+        <label class="flex items-center space-x-3 text-indigo-700 font-semibold">
+          <input type="checkbox" name="adapt" {% if request.form.get('adapt')=='on' %}checked{% else %}checked{% endif %}
+            class="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out" />
+          <span>Adaptive Smooth & Sharpen</span>
+        </label>
+
+        <label class="text-indigo-700 font-medium">
+          Sigma:
+          <input type="number" step="0.1" name="adapt_sigma" value="{{ request.form.get('adapt_sigma', '1.0') }}"
+            class="border border-indigo-300 rounded-lg p-2 w-24 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-600 transition duration-300" />
+        </label>
+
+        <label class="text-indigo-700 font-medium">
+          Sharp:
+          <input type="number" step="0.1" name="adapt_sharp" value="{{ request.form.get('adapt_sharp', '1.0') }}"
+            class="border border-indigo-300 rounded-lg p-2 w-24 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-600 transition duration-300" />
+        </label>
+      </div>
+
+      <div class="flex items-center gap-6 justify-center mt-6">
+        <button type="submit"
+          class="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:from-blue-700 hover:to-blue-900 transition duration-300">
+          Process Image
+        </button>
+
+        {% if original_image and processed_image %}
+        <button type="button" onclick="closeBothImages()"
+          class="bg-gradient-to-r from-red-600 to-red-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:from-red-700 hover:to-red-900 transition duration-300">
+          Close ×
+        </button>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if original_image and processed_image %}
+    <div id="image-wrapper" class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-10">
+
+      <div
+        class="relative bg-white rounded-3xl shadow-xl p-6 border border-blue-200 hover:shadow-blue-300 transition duration-500 select-none">
+        <h2 class="text-xl font-semibold mb-4 text-center text-blue-700">Original Image:</h2>
+        <img src="{{ original_image }}" alt="Original" class="rounded-xl shadow-md max-w-full mx-auto" />
+      </div>
+
+      <div
+        class="relative bg-white rounded-3xl shadow-xl p-6 border border-green-200 hover:shadow-green-300 transition duration-500 select-none">
+        <h2 class="text-xl font-semibold mb-4 text-center text-green-700">Processed Image:</h2>
+        <img src="{{ processed_image }}" alt="Processed" class="rounded-xl shadow-md max-w-full mx-auto" />
+        <a href="{{ processed_image }}" download
+          class="inline-block mt-5 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-semibold shadow-lg transition duration-300 select-none text-center w-full md:w-auto">
+          Download
+        </a>
+      </div>
+
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function closeBothImages() {
+      const wrapper = document.getElementById('image-wrapper');
+      if (wrapper) wrapper.remove();
+      window.location.href = "/";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+1. Guided Filter
+
+    Function: guided_filter(I, p, r, eps)
+
+    What it is:
+    A edge-preserving smoothing filter introduced by He et al. (2010). It smooths the image p using a guidance image I while preserving edges in I.
+
+    Purpose in this code:
+    To refine the transmission map (estimate of haze density) after the initial rough estimation using Dark Channel Prior. This helps remove artifacts and preserves edges in the transmission, improving the final dehazed image quality.
+
+    How it works:
+    Uses a local linear model based on mean and variance calculations over a window of radius r with regularization parameter eps.
+
+2. Dark Channel Prior (DCP) Dehazing
+
+    Key functions: dark_channel(), estimate_atmospheric_light(), estimate_transmission(), recover_radiance(), dehaze_dcp()
+
+    What it is:
+    A classical and effective dehazing algorithm from He et al. (2009). It’s based on the observation that in most non-sky patches of haze-free outdoor images, at least one color channel has very low intensity (the dark channel).
+
+    How it works:
+
+        Compute the dark channel by taking the minimum intensity in a local patch over RGB channels.
+
+        Estimate atmospheric light (the color of haze) from brightest pixels in the dark channel.
+
+        Estimate transmission (how much light is transmitted through haze).
+
+        Refine transmission with the guided filter.
+
+        Recover the haze-free image by inverting the haze imaging model:
+        J(x)=I(x)−Amax⁡(t(x),t0)+A
+        J(x)=max(t(x),t0​)I(x)−A​+A
+
+    Additional processing:
+    After dehazing, the code applies histogram stretching and unsharp masking to enhance contrast and sharpness.
+
+3. Histogram Stretching
+
+    Function: histogram_stretch(img_bgr)
+
+    What it is:
+    A contrast enhancement technique. It remaps pixel intensities to span a larger range, usually the full 0-255 range, to improve image contrast.
+
+    How it works:
+    For each channel, it finds the 2nd and 98th percentile pixel intensities and linearly stretches values between these percentiles to cover 0-255.
+
+4. Unsharp Masking
+
+    Function: unsharp_mask(img_bgr, amount=1.0, radius=1.0)
+
+    What it is:
+    An image sharpening technique that enhances edges by subtracting a blurred version from the original image.
+
+    How it works:
+
+        Blur the image with a Gaussian filter (radius controls blur amount).
+
+        Subtract blurred image from original to get edge mask.
+
+        Add scaled edge mask back to original (amount controls sharpening strength).
+
+    Effect: Makes the image appear crisper and more detailed.
+
+5. Frequency Enhance
+
+    Function: frequency_enhance(img_bgr, amount=1.0)
+
+    What it is:
+    A frequency domain enhancement method that amplifies high-frequency components to enhance details.
+
+    How it works:
+
+        Converts image to grayscale and performs Fourier transform.
+
+        Applies a frequency filter that boosts higher frequencies proportionally to amount.
+
+        Inverse Fourier transform back to spatial domain.
+
+        Replaces the luminance (Y channel) in YCrCb space with enhanced grayscale image.
+
+    Effect: Enhances fine textures and details by boosting high-frequency information.
+
+6. Adaptive Smooth & Sharpen
+
+    Function: adaptive_smooth_sharpen(img_bgr, sigma=1.0, amount=1.0)
+
+    What it is:
+    A combination of bilateral filtering and unsharp masking to smooth while preserving edges and then sharpen.
+
+    How it works:
+
+        Applies bilateral filter to smooth image but keep edges.
+
+        Applies Gaussian blur to the smoothed image.
+
+        Creates a mask from difference of smoothed and blurred images.
+
+        Adds a weighted mask back to smoothed image for sharpening.
+
+    Effect: Smoothes noise/artifacts but preserves edges and adds sharpness.
+
